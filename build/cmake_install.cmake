@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/31386/Documents/项目/任务栏c
+# Install script for directory: C:/Users/31386/Documents/GitHub/Entray
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files/TrayIconApp")
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/TrayIconApp")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -40,5 +40,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/31386/Documents/项目/任务栏c/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/31386/Documents/GitHub/Entray/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

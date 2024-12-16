@@ -1,10 +1,12 @@
 #include <windows.h>
 #include <shellapi.h>
+#include <winreg.h>
 
 #define WM_TRAYICON (WM_USER + 1)
 #define ID_TRAYICON 1
 #define ID_EXIT     2000
 #define ID_SELECT   2001
+#define ID_AUTOSTART 2002
 
 // 添加以下宏定义来支持 Unicode
 #ifndef UNICODE
@@ -44,6 +46,104 @@ void UpdateTrayIcon(const TCHAR* programPath) {
     }
 }
 
+// 在全局变量声明后添加这些函数
+void SaveTargetPath(const TCHAR* path) {
+    HKEY hKey;
+    // 先删除已有的键，确保清理旧数据
+    RegDeleteKey(HKEY_CURRENT_USER, TEXT("Software\\Entray"));
+    
+    // 重新创建键并保存新值
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, 
+        TEXT("Software\\Entray"), 
+        0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+        
+        // 写入新路径
+        RegSetValueEx(hKey, TEXT("TargetPath"), 0, REG_SZ,
+            (BYTE*)path, (lstrlen(path) + 1) * sizeof(TCHAR));
+        
+        RegCloseKey(hKey);
+    }
+}
+
+void LoadTargetPath() {
+    HKEY hKey;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+        TEXT("Software\\Entray"),
+        0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        
+        DWORD type = REG_SZ;
+        DWORD size = MAX_PATH * sizeof(TCHAR);
+        
+        // 读取路径
+        if (RegQueryValueEx(hKey, TEXT("TargetPath"), NULL, &type,
+            (BYTE*)g_targetPath, &size) == ERROR_SUCCESS) {
+            
+            // 验证文件是否存在
+            WIN32_FIND_DATA findData;
+            HANDLE hFind = FindFirstFile(g_targetPath, &findData);
+            if (hFind == INVALID_HANDLE_VALUE) {
+                // 文件不存在，清除路径并删除注册表项
+                g_targetPath[0] = '\0';
+                RegCloseKey(hKey);
+                RegDeleteKey(HKEY_CURRENT_USER, TEXT("Software\\Entray"));
+            } else {
+                FindClose(hFind);
+                // 文件存在，更新托盘图标
+                UpdateTrayIcon(g_targetPath);
+            }
+        }
+        
+        RegCloseKey(hKey);
+    }
+}
+
+// 检查是否已设置开机自启
+bool IsAutoStartEnabled() {
+    HKEY hKey;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+        TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+        0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+        
+        TCHAR path[MAX_PATH];
+        DWORD size = sizeof(path);
+        DWORD type = REG_SZ;
+        
+        LONG result = RegQueryValueEx(hKey, TEXT("Entray"), NULL, &type,
+            (BYTE*)path, &size);
+            
+        RegCloseKey(hKey);
+        return (result == ERROR_SUCCESS);
+    }
+    return false;
+}
+
+// 设置或取消开机自启
+void ToggleAutoStart(HWND hwnd) {
+    HKEY hKey;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+        TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+        0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS) {
+        
+        if (IsAutoStartEnabled()) {
+            // 取消开机自启
+            if (RegDeleteValue(hKey, TEXT("Entray")) == ERROR_SUCCESS) {
+                // MessageBox(hwnd, TEXT("已取消开机自启"), TEXT("提示"), MB_OK | MB_ICONINFORMATION);
+            }
+        } else {
+            // 设置开机自启
+            TCHAR exePath[MAX_PATH];
+            GetModuleFileName(NULL, exePath, MAX_PATH);
+            
+            if (RegSetValueEx(hKey, TEXT("Entray"), 0, REG_SZ,
+                (BYTE*)exePath, (lstrlen(exePath) + 1) * sizeof(TCHAR)) == ERROR_SUCCESS) {
+                // MessageBox(hwnd, TEXT("已设置开机自启"), TEXT("提示"), MB_OK | MB_ICONINFORMATION);
+            }
+        }
+        
+        RegCloseKey(hKey);
+    }
+}
+
 // 窗口过程函数声明
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -51,8 +151,14 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void CreatePopupMenu(HWND hwnd, POINT pt) {
     HMENU hMenu = CreatePopupMenu();
     InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING, ID_SELECT, TEXT("选择程序"));
-    InsertMenu(hMenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-    InsertMenu(hMenu, 2, MF_BYPOSITION | MF_STRING, ID_EXIT, TEXT("退出"));
+    
+    // 添加开机自启动选项
+    bool isAutoStart = IsAutoStartEnabled();
+    InsertMenu(hMenu, 1, MF_BYPOSITION | MF_STRING, ID_AUTOSTART,
+        isAutoStart ? TEXT("取消开机自启") : TEXT("开机自启"));
+    
+    InsertMenu(hMenu, 2, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+    InsertMenu(hMenu, 3, MF_BYPOSITION | MF_STRING, ID_EXIT, TEXT("退出"));
     
     SetForegroundWindow(hwnd);
     TrackPopupMenu(hMenu, TPM_RIGHTALIGN | TPM_BOTTOMALIGN, 
@@ -106,6 +212,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
 
     Shell_NotifyIcon(NIM_MODIFY, &g_nid);
+    
+    // 加载上次保存的程序路径
+    LoadTargetPath();
 
     // 消息循环
     MSG msg;
@@ -117,6 +226,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     // 清理托盘图标
     Shell_NotifyIcon(NIM_DELETE, &g_nid);
     DestroyIcon(g_nid.hIcon);
+
+    // 如果保存的路径已经无效���清理注册表
+    if (g_targetPath[0] == '\0') {
+        RegDeleteKey(HKEY_CURRENT_USER, TEXT("Software\\Entray"));
+    }
+
     return static_cast<int>(msg.wParam);
 }
 
@@ -160,9 +275,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
                         lstrcpyn(g_targetPath, szFile, MAX_PATH);
                         // 更新托盘图标
                         UpdateTrayIcon(g_targetPath);
+                        // 保存选择的路径
+                        SaveTargetPath(g_targetPath);
                     }
                     break;
                 }
+                case ID_AUTOSTART:
+                    ToggleAutoStart(hwnd);
+                    break;
             }
             break;
 
