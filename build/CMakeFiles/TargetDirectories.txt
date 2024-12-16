@@ -1,3 +1,3 @@
-C:/Users/31386/Documents/项目/任务栏c/build/CMakeFiles/TrayIconApp.dir
-C:/Users/31386/Documents/项目/任务栏c/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/31386/Documents/项目/任务栏c/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/TrayIconApp.dir
+C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/ZERO_CHECK.dir

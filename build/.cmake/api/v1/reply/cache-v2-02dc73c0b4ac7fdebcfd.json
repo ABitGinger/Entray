@@ -18,6 +18,18 @@
 			"value" : "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.41.34120/bin/Hostx64/x64/lib.exe"
 		},
 		{
+			"name" : "CMAKE_BUILD_TYPE",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "No help, variable specified on the command line."
+				}
+			],
+			"type" : "STRING",
+			"value" : "Debug"
+		},
+		{
 			"name" : "CMAKE_CACHEFILE_DIR",
 			"properties" : 
 			[
@@ -27,7 +39,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/31386/Documents/\u9879\u76ee/\u4efb\u52a1\u680fc/build"
+			"value" : "c:/Users/31386/Documents/GitHub/Entray/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -431,7 +443,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/31386/Documents/\u9879\u76ee/\u4efb\u52a1\u680fc/build/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -467,7 +479,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "x64"
+			"value" : ""
 		},
 		{
 			"name" : "CMAKE_GENERATOR_TOOLSET",
@@ -479,7 +491,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "host=x64"
+			"value" : ""
 		},
 		{
 			"name" : "CMAKE_HOME_DIRECTORY",
@@ -491,7 +503,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/31386/Documents/\u9879\u76ee/\u4efb\u52a1\u680fc"
+			"value" : "C:/Users/31386/Documents/GitHub/Entray"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -503,7 +515,7 @@
 				}
 			],
 			"type" : "PATH",
-			"value" : "C:/Program Files/TrayIconApp"
+			"value" : "C:/Program Files (x86)/TrayIconApp"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -615,7 +627,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/mt.exe"
+			"value" : "CMAKE_MT-NOTFOUND"
 		},
 		{
 			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
@@ -703,7 +715,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/rc.exe"
+			"value" : "rc"
 		},
 		{
 			"name" : "CMAKE_RC_COMPILER_WORKS",
@@ -1027,7 +1039,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/31386/Documents/\u9879\u76ee/\u4efb\u52a1\u680fc/build"
+			"value" : "C:/Users/31386/Documents/GitHub/Entray/build"
 		},
 		{
 			"name" : "TrayIconApp_IS_TOP_LEVEL",
@@ -1051,7 +1063,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/31386/Documents/\u9879\u76ee/\u4efb\u52a1\u680fc"
+			"value" : "C:/Users/31386/Documents/GitHub/Entray"
 		}
 	],
 	"kind" : "cache",
