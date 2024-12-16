@@ -20,6 +20,30 @@ HWND g_hwnd = NULL;
 NOTIFYICONDATA g_nid = {0};
 TCHAR g_targetPath[MAX_PATH] = TEXT("");
 
+// 在全局变量声明后添加新函数
+void UpdateTrayIcon(const TCHAR* programPath) {
+    // 保存旧图标以便删除
+    HICON oldIcon = g_nid.hIcon;
+    
+    // 从程序文件中提取图标
+    HICON newIcon = NULL;
+    ExtractIconEx(programPath, 0, NULL, &newIcon, 1);
+    
+    // 如果无法提取图标，使用默认图标
+    if (!newIcon) {
+        newIcon = LoadIcon(NULL, IDI_APPLICATION);
+    }
+    
+    // 更新托盘图标
+    g_nid.hIcon = newIcon;
+    Shell_NotifyIcon(NIM_MODIFY, &g_nid);
+    
+    // 删除旧图标
+    if (oldIcon) {
+        DestroyIcon(oldIcon);
+    }
+}
+
 // 窗口过程函数声明
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -134,6 +158,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
                     
                     if (GetOpenFileName(&ofn)) {
                         lstrcpyn(g_targetPath, szFile, MAX_PATH);
+                        // 更新托盘图标
+                        UpdateTrayIcon(g_targetPath);
                     }
                     break;
                 }
