@@ -33,6 +33,9 @@ compile_commands.json
 .vscode/
 .idea/
 
+# AI 助手的工作目录（会话记录、本地笔记），不进版本库
+.workbuddy/
+
 # Windows
 Thumbs.db
 desktop.ini
