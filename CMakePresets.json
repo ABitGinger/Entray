@@ -8,17 +8,15 @@
   "configurePresets": [
     {
       "name": "msvc",
-      "displayName": "Visual Studio 2022 · x64（推荐）",
-      "description": "默认目标：Windows 10/11 64 位",
-      "generator": "Visual Studio 17 2022",
+      "displayName": "Visual Studio · x64（推荐）",
+      "description": "默认目标：Windows 10/11 64 位。不写死生成器版本，由 CMake 自动挑本机装的 Visual Studio（2022 / 2026 都行）",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build"
     },
     {
       "name": "msvc-x86",
-      "displayName": "Visual Studio 2022 · x86",
-      "description": "给还在用 32 位系统的机器",
-      "generator": "Visual Studio 17 2022",
+      "displayName": "Visual Studio · x86",
+      "description": "给还在用 32 位系统的机器。同样不写死生成器版本",
       "architecture": "Win32",
       "binaryDir": "${sourceDir}/build-x86"
     },

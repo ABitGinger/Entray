@@ -26,15 +26,19 @@ jobs:
 
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 查看工具链版本
         run: |
           cmake --version
           python --version
 
+      # 这里刻意不写 -G。以前写死 -G "Visual Studio 17 2022"，而 windows-latest
+      # 的镜像后来换成了 Visual Studio 18（VS 2026），于是这一步直接报
+      # "could not find any instance of Visual Studio"，整个流水线从头就挂。
+      # 让 CMake 自己挑默认生成器（Windows 上就是最新装的那个 VS），才能扛住镜像升级。
       - name: 配置 CMake
-        run: cmake -S . -B ${{ env.BUILD_DIR }} -G "Visual Studio 17 2022" -A x64
+        run: cmake -S . -B ${{ env.BUILD_DIR }} -A x64
 
       - name: 编译 Release
         run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.CONFIG }} --parallel
@@ -49,7 +53,7 @@ jobs:
         run: cpack --config ${{ env.BUILD_DIR }}/CPackConfig.cmake -C ${{ env.CONFIG }} -B ${{ env.BUILD_DIR }}/package
 
       - name: 上传构建产物
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Entray-windows-x64
           if-no-files-found: error

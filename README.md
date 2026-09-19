@@ -59,7 +59,10 @@
 
 ## 从源码构建
 
-需要 Visual Studio 2022（勾选"使用 C++ 的桌面开发"）和 CMake 3.20+。
+需要任意版本的 Visual Studio（2022 或更新，勾选"使用 C++ 的桌面开发"）和 CMake 3.20+。
+构建脚本和 CI 都不写死生成器版本，由 CMake 自己挑本机装的那个，换 VS 版本不用改配置。
+
+不想装 Visual Studio 也可以，用 MinGW-w64 一样能编出单文件产物（见 `开发文档.md`）。
 
 ```powershell
 # 最简单的方式：一把梭，编译 + 自检 + 输出到 dist\Entray.exe

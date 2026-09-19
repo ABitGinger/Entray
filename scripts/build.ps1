@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     会依次做三件事：
-      1. 用 Visual Studio 2022 生成器配置 CMake（不需要先跑 vcvars，CMake 自己会找到 VS）；
+      1. 让 CMake 自己找本机装的 Visual Studio 来配置（不需要先跑 vcvars）；
       2. 编译指定配置；
       3. 用 tools/check_exe.py 检查产物确实不依赖任何运行库，然后把 exe 复制到 dist\。
 
@@ -69,9 +69,12 @@ Write-Host "配置      : $Configuration / $Platform"
 Write-Host ''
 
 Write-Host '[1/4] 配置 CMake ...'
-& $cmake -S $repoRoot -B $buildDir -G 'Visual Studio 17 2022' -A $Platform
+# 不指定 -G：让 CMake 自己挑本机装的 Visual Studio（2022 / 2026 都能用）。
+# 写死成 'Visual Studio 17 2022' 的话，装了更新版本 VS 的机器会直接报
+# “could not find any instance of Visual Studio”。
+& $cmake -S $repoRoot -B $buildDir -A $Platform
 if ($LASTEXITCODE -ne 0) {
-    throw "CMake 配置失败（退出码 $LASTEXITCODE）。请确认已安装 Visual Studio 2022 及“使用 C++ 的桌面开发”工作负载。"
+    throw "CMake 配置失败（退出码 $LASTEXITCODE）。请确认已安装 Visual Studio（2022 或更新版本）及“使用 C++ 的桌面开发”工作负载。"
 }
 
 Write-Host ''
