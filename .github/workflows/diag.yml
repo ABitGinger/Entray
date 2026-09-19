@@ -1,7 +1,8 @@
 name: Diag
 
-# 临时诊断工作流：把 runner 上的环境信息和 CMake 配置输出原样推回 ci-diag 分支，
-# 方便在没有 Actions 日志读取权限的地方排查。查清后即可删除本文件。
+# 临时诊断工作流：runner 上拿不到日志（本地读不到 Actions 日志），
+# 所以把环境和 CMake 配置输出直接发成 Issue，用来排查 build.yml 的失败。
+# 查清后删除本文件。
 on:
   push:
     paths:
@@ -9,7 +10,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  issues: write
 
 jobs:
   diag:
@@ -22,60 +24,56 @@ jobs:
 
       - name: 收集环境与配置输出
         shell: pwsh
+        continue-on-error: true
         run: |
-          # GitHub 的 pwsh 默认把原生命令的 stderr 当成错误抛出，这里放开，
-          # 否则 CMake 的普通警告也会让这一步直接失败。
           $ErrorActionPreference = 'Continue'
           $env:PYTHONIOENCODING = 'utf-8'
-
-          $out = New-Object System.Collections.Generic.List[string]
-          $out.Add('### uname / 系统')
-          $out.Add((Get-ComputerInfo -Property OsName,OsVersion,OsBuildNumber | Out-String))
-          $out.Add('### cmake --version')
-          $out.Add((cmake --version | Out-String))
-          $out.Add('### python --version')
-          $out.Add((python --version 2>&1 | Out-String))
-          $out.Add('### vswhere -all -products *')
-          $vw = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          if (Test-Path $vw) {
-            $out.Add((& $vw -all -products * -format json | Out-String))
-          } else {
-            $out.Add('vswhere 不存在')
-          }
-
-          $out.Add('### cmake --help 中列出的生成器')
-          $out.Add(((cmake --help) | Select-String -Pattern 'Visual Studio|Ninja|Makefiles' | Out-String))
-
-          $out.Add('### 配置：Visual Studio 17 2022 / x64')
-          $cfg = (& cmake -S . -B ci-build -G "Visual Studio 17 2022" -A x64 2>&1 | Out-String)
-          $out.Add($cfg)
-          $out.Add("### configure 退出码 = $LASTEXITCODE")
-
-          foreach ($f in @('ci-build/CMakeFiles/CMakeError.log', 'ci-build/CMakeFiles/CMakeOutput.log')) {
-            $out.Add("### $f")
-            if (Test-Path $f) {
-              $out.Add((Get-Content $f -Tail 120 | Out-String))
-            } else {
-              $out.Add('(不存在)')
-            }
-          }
-
-          $out.Add('### ci-build 目录内容')
-          if (Test-Path ci-build) {
-            $out.Add((Get-ChildItem -Recurse ci-build | Select-Object -First 80 -ExpandProperty FullName | Out-String))
-          } else {
-            $out.Add('(目录没生成)')
-          }
-
           New-Item -ItemType Directory -Force -Path ci-diag | Out-Null
-          ($out -join "`n") | Out-File -FilePath ci-diag/result.txt -Encoding utf8
 
-      - name: 推回诊断结果
+          $t = @()
+          $t += '### cmake --version'
+          $t += (cmake --version 2>&1 | Out-String)
+          $t += '### python --version'
+          $t += (python --version 2>&1 | Out-String)
+
+          $vw = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $t += "### vswhere 存在: " + (Test-Path $vw)
+          if (Test-Path $vw) {
+            $t += (& $vw -latest -products * -property installationPath 2>&1 | Out-String)
+            $t += (& $vw -latest -products * -property installationVersion 2>&1 | Out-String)
+          }
+
+          $t += '### 按 build.yml 的方式跑配置（不合并 stderr，看谁往 stderr 写东西）'
+          $cfg = (& cmake -S . -B ci-build -G "Visual Studio 17 2022" -A x64 2>&1 | Out-String)
+          $t += $cfg
+          $t += "### configure 退出码 = $LASTEXITCODE"
+
+          $t += '### ci-build 里生成了什么'
+          if (Test-Path ci-build) {
+            $t += (Get-ChildItem ci-build -Recurse -File | Select-Object -First 60 -ExpandProperty FullName | Out-String)
+          } else {
+            $t += '(ci-build 目录没生成)'
+          }
+
+          ($t -join "`n") | Out-File -FilePath ci-diag/result.txt -Encoding utf8
+
+      - name: 把结果发成 Issue
+        if: always()
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $ErrorActionPreference = 'Continue'
-          git config user.name 'ci-diag'
-          git config user.email 'ci-diag@users.noreply.github.com'
-          git add -f ci-diag/result.txt
-          git commit -m 'diag: CI 环境与 CMake 配置输出 [skip ci]'
-          git push --force origin HEAD:ci-diag
+          if (-not (Test-Path ci-diag/result.txt)) {
+            'result.txt 没生成，说明“收集”这一步在更早的地方就挂了' | Out-File -FilePath ci-diag/result.txt -Encoding utf8
+          }
+          $body = Get-Content ci-diag/result.txt -Raw
+          if ($body.Length -gt 60000) { $body = $body.Substring(0, 60000) }
+          $payload = @{
+            title = "ci-diag 结果"
+            body  = $body
+          } | ConvertTo-Json -Depth 4
+          Invoke-RestMethod -Method Post `
+            -Uri 'https://api.github.com/repos/ABitGinger/Entray/issues' `
+            -Headers @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = 'application/vnd.github+json' } `
+            -Body $payload -ContentType 'application/json'
