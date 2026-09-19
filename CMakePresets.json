@@ -1,0 +1,74 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "msvc",
+      "displayName": "Visual Studio 2022 · x64（推荐）",
+      "description": "默认目标：Windows 10/11 64 位",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "msvc-x86",
+      "displayName": "Visual Studio 2022 · x86",
+      "description": "给还在用 32 位系统的机器",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build-x86"
+    },
+    {
+      "name": "mingw",
+      "displayName": "MinGW Makefiles · Release",
+      "description": "不想装 Visual Studio 时可用 MinGW-w64 交叉验证",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build-mingw",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "msvc-release",
+      "displayName": "Release · x64",
+      "configurePreset": "msvc",
+      "configuration": "Release"
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "Debug · x64",
+      "configurePreset": "msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "msvc-x86-release",
+      "displayName": "Release · x86",
+      "configurePreset": "msvc-x86",
+      "configuration": "Release"
+    },
+    {
+      "name": "mingw-release",
+      "displayName": "Release · MinGW",
+      "configurePreset": "mingw"
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "msvc-release",
+      "displayName": "打包 zip · Release x64",
+      "configurePreset": "msvc",
+      "configurations": [
+        "Release"
+      ],
+      "generators": [
+        "ZIP"
+      ]
+    }
+  ]
+}

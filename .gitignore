@@ -1,0 +1,38 @@
+# 构建产物（CMake 输出目录）
+/build/
+/build-*/
+/dist/
+/out/
+
+# CMake 中间文件（万一有人直接在源码目录里构建）
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+compile_commands.json
+
+# 编译产物
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+*.res
+*.recipe
+*.tlog
+*.lastbuildstate
+
+# 本项目发布物是单个 exe，仓库里不放任何可执行文件
+*.exe
+*.dll
+
+# 编辑器 / IDE
+.vs/
+.vscode/
+.idea/
+
+# Windows
+Thumbs.db
+desktop.ini

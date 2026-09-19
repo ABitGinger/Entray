@@ -1,0 +1,71 @@
+name: Build
+
+# 推 tag（v2.0.0 这种）时自动出 Release，附上单文件 exe 和 zip；
+# 平时推 main / 提 PR 只做编译与产物自检。
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Windows x64
+    runs-on: windows-latest
+
+    env:
+      BUILD_DIR: build
+      CONFIG: Release
+      # tools/check_exe.py 的控制台输出里有中文，固定成 UTF-8 免得日志乱码
+      PYTHONIOENCODING: utf-8
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 查看工具链版本
+        run: |
+          cmake --version
+          python --version
+
+      - name: 配置 CMake
+        run: cmake -S . -B ${{ env.BUILD_DIR }} -G "Visual Studio 17 2022" -A x64
+
+      - name: 编译 Release
+        run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.CONFIG }} --parallel
+
+      # 这道关卡是整个发布流程的关键：确认 exe 没有引入 VCRUNTIME140 / MSVCP140 /
+      # ucrtbased 这类运行库依赖，否则它拿到别人电脑上照样会报“缺少 xxx.dll”。
+      # 顺便确认图标、清单、版本信息都真的内嵌进去了。
+      - name: 校验产物（单文件 / 无运行库依赖 / 资源内嵌）
+        run: python tools/check_exe.py ${{ env.BUILD_DIR }}/${{ env.CONFIG }}/Entray.exe
+
+      - name: 打包 zip
+        run: cpack --config ${{ env.BUILD_DIR }}/CPackConfig.cmake -C ${{ env.CONFIG }} -B ${{ env.BUILD_DIR }}/package
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Entray-windows-x64
+          if-no-files-found: error
+          path: |
+            ${{ env.BUILD_DIR }}/${{ env.CONFIG }}/Entray.exe
+            ${{ env.BUILD_DIR }}/package/*.zip
+
+      - name: 附到 Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.BUILD_DIR }}/${{ env.CONFIG }}/Entray.exe
+            ${{ env.BUILD_DIR }}/package/*.zip
+          generate_release_notes: true
+          body: |
+            单文件免安装：下载 `Entray.exe` 双击即可，**不需要安装 VC++ 运行库**。
+
+            如果系统提示“未知发布者”，在 SmartScreen 弹窗里点“更多信息 → 仍要运行”即可。
