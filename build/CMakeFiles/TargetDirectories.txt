@@ -1,3 +1,0 @@
-C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/TrayIconApp.dir
-C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/31386/Documents/GitHub/Entray/build/CMakeFiles/ZERO_CHECK.dir

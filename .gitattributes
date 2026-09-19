@@ -1,2 +1,33 @@
-# Auto detect text files and perform LF normalization
+# 默认按内容自动判断文本/二进制，文本文件在仓库里统一用 LF
 * text=auto
+
+# ---- 文本文件 ----
+*.c        text
+*.cpp      text
+*.h        text
+*.rc       text
+*.manifest text
+*.py       text
+*.md       text
+*.txt      text
+*.json     text
+*.yml      text
+*.xml      text
+CMakeLists.txt text
+*.cmake    text
+.gitignore text
+.gitattributes text
+
+# Windows 上的脚本用 CRLF，免得在某些环境下执行出问题
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# ---- 二进制文件，禁止任何行尾转换 ----
+*.ico binary
+*.png binary
+*.jpg binary
+*.zip binary
+*.exe binary
+*.dll binary
+*.pdb binary
+*.lib binary
