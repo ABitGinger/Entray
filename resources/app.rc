@@ -1,0 +1,56 @@
+// Entray 的资源脚本：图标 + 应用程序清单 + 版本信息。
+// 这些内容全部会被编译进 exe，因此发布时只需要一个 Entray.exe，不依赖任何外部文件。
+#pragma code_page(65001)
+
+#include <winver.h>
+#include "../src/resource.h"
+#include "../src/version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// 应用程序图标。ID 必须与 src/resource.h 中的 IDI_ENTRAY 一致。
+//
+IDI_ENTRAY ICON "icon.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+// 应用程序清单。
+// 1 是 CREATEPROCESS_MANIFEST_RESOURCE_ID；24 是 RT_MANIFEST。
+// 这里必须写数字字面量：windows.h 里的 RT_MANIFEST 是 MAKEINTRESOURCE(24)，
+// 资源脚本的解析器无法求值。
+//
+// 清单里声明了：v6 通用控件、asInvoker 权限、高 DPI 感知、受支持的 Windows 版本。
+// 缺了它，Windows 会按“安装程序”启发式规则处理，可能弹出 UAC 或“此程序可能未正确安装”。
+//
+1 24 "app.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+// 版本信息，即 exe 右键“属性 → 详细信息”里显示的内容。
+//
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    ENTRAY_VERSION_MAJOR,ENTRAY_VERSION_MINOR,ENTRAY_VERSION_PATCH,ENTRAY_VERSION_BUILD
+ PRODUCTVERSION ENTRAY_VERSION_MAJOR,ENTRAY_VERSION_MINOR,ENTRAY_VERSION_PATCH,ENTRAY_VERSION_BUILD
+ FILEFLAGSMASK  0x3fL
+ FILEFLAGS      0x0L
+ FILEOS         VOS_NT_WINDOWS32
+ FILETYPE       VFT_APP
+ FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        // 0x0804 = 简体中文，0x04b0 = Unicode
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName",      "ABitGinger"
+            VALUE "FileDescription",  "Entray 托盘快捷启动器"
+            VALUE "FileVersion",      ENTRAY_VERSION_STRING
+            VALUE "InternalName",     ENTRAY_PRODUCT_NAME
+            VALUE "LegalCopyright",   "Copyright (C) ABitGinger"
+            VALUE "OriginalFilename", "Entray.exe"
+            VALUE "ProductName",      "Entray 托盘快捷启动器"
+            VALUE "ProductVersion",   ENTRAY_VERSION_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0804, 1200
+    END
+END
