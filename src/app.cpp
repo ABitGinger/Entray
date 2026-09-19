@@ -105,7 +105,8 @@ bool TrayApp::Initialize(HINSTANCE instance) {
     config::RefreshAutoStartPathIfNeeded();
 
     if (m_targetPath.empty()) {
-        ShowBalloon(L"Entray 已就绪", L"右键单击这个图标，选择你想从托盘启动的程序。", NIIF_INFO);
+        ShowBalloon(L"Entray 已就绪",
+                    L"右键单击托盘里的这个图标，选择你想从此启动的程序。", NIIF_INFO);
     } else if (!TargetFileExists()) {
         const std::wstring text = ShortDisplayName() + L" 可能已被移动或删除，请右键重新选择。";
         ShowBalloon(L"找不到目标程序", text.c_str(), NIIF_WARNING);
@@ -309,7 +310,7 @@ void TrayApp::ClearTarget() {
     ApplyTrayIcon();
     UpdateToolTip();
     config::ClearTargetPath();
-    ShowBalloon(L"Entray", L"已清除选择的程序，右键可以重新选择。", NIIF_INFO);
+    // 这里刻意不发通知：清除是个安静的清理动作，托盘提示文字已经能看出状态。
 }
 
 void TrayApp::ReloadTargetIcon() {
@@ -379,7 +380,8 @@ void TrayApp::OnCloseTarget() {
     const size_t closedCount = pids.size() - stillAlive.size();
 
     if (stillAlive.empty()) {
-        ShowBalloon(L"Entray", (L"已关闭 " + name + L"。").c_str(), NIIF_INFO);
+        // 关闭成功属于正常结果，不弹通知；需要留痕的话看调试日志。
+        util::DebugLog(L"已关闭 " + name + L"，共 " + std::to_wstring(closedCount) + L" 个进程");
         m_lastLaunchedPid = 0;
         return;
     }
@@ -397,9 +399,7 @@ void TrayApp::OnCloseTarget() {
     if (::MessageBoxW(m_window, question.c_str(), L"Entray",
                       MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) == IDYES) {
         const int forced = proc::ForceClose(stillAlive);
-        const std::wstring text =
-            L"已强制结束 " + name + L"（" + std::to_wstring(forced) + L" 个进程）。";
-        ShowBalloon(L"Entray", text.c_str(), NIIF_INFO);
+        util::DebugLog(L"已强制结束 " + name + L"，共 " + std::to_wstring(forced) + L" 个进程");
     }
     m_lastLaunchedPid = 0;
 }
@@ -435,9 +435,8 @@ void TrayApp::OnChooseProgram() {
         return;
     }
 
+    // 选好程序后不再弹通知：托盘图标、提示文字和菜单都会立刻反映新状态。
     ApplyTarget(selected, true);
-    const std::wstring text = L"已选择 " + DisplayName() + L"，左键单击图标即可启动。";
-    ShowBalloon(L"Entray", text.c_str(), NIIF_INFO);
 }
 
 void TrayApp::OnRevealInExplorer() {
@@ -460,7 +459,8 @@ void TrayApp::OnToggleAutoStart() {
                       MB_OK | MB_ICONWARNING);
         return;
     }
-    ShowBalloon(L"Entray", wasEnabled ? L"已关闭开机自启。" : L"已开启开机自启。", NIIF_INFO);
+    // 开关状态由右键菜单的勾选项体现，不再额外弹通知。
+    util::DebugLog(wasEnabled ? L"已关闭开机自启" : L"已开启开机自启");
 }
 
 void TrayApp::OnAbout() {
